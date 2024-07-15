@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfd-master
+  annotations:
+     icos.telemetry/scrape: "true"
+     icos.telemetry/interval: "60s"  
+
+spec:
+  selector:
+    app: nfd-prom-exporter
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8081
+  type: ClusterIP

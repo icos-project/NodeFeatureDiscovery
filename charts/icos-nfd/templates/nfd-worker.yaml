@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: nfd
+  name: nfd-worker
+  namespace: {{ include "icos-nfd.namespace" . }}
+spec:
+  selector:
+    matchLabels:
+      app: nfd-worker
+  template:
+    metadata:
+      labels:
+        app: nfd-worker
+    spec:
+      containers:
+      - args:
+        - -server=nfd-master:8080
+        command:
+        - nfd-worker
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: gcr.io/k8s-staging-nfd/node-feature-discovery:master
+        imagePullPolicy: Always
+        name: nfd-worker
+        ports:
+        - containerPort: 8081
+          name: metrics
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /host-boot
+          name: host-boot
+          readOnly: true
+        - mountPath: /host-etc/os-release
+          name: host-os-release
+          readOnly: true
+        - mountPath: /host-sys
+          name: host-sys
+          readOnly: true
+        - mountPath: /host-usr/lib
+          name: host-usr-lib
+          readOnly: true
+        - mountPath: /host-lib
+          name: host-lib
+          readOnly: true
+        - mountPath: /etc/kubernetes/node-feature-discovery/source.d/
+          name: source-d
+          readOnly: true
+        - mountPath: /etc/kubernetes/node-feature-discovery/features.d/
+          name: features-d
+          readOnly: true
+        - mountPath: /etc/kubernetes/node-feature-discovery
+          name: nfd-worker-conf
+          readOnly: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: nfd-worker
+      volumes:
+      - hostPath:
+          path: /boot
+        name: host-boot
+      - hostPath:
+          path: /etc/os-release
+        name: host-os-release
+      - hostPath:
+          path: /sys
+        name: host-sys
+      - hostPath:
+          path: /usr/lib
+        name: host-usr-lib
+      - hostPath:
+          path: /lib
+        name: host-lib
+      - hostPath:
+          path: /etc/kubernetes/node-feature-discovery/source.d/
+        name: source-d
+      - hostPath:
+          path: /etc/kubernetes/node-feature-discovery/features.d/
+        name: features-d
+      - configMap:
+          name: nfd-worker-conf
+        name: nfd-worker-conf

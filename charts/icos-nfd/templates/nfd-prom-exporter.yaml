@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nfd-prom
+  name: nfd-prom-exporter
+  namespace: {{ include "icos-nfd.namespace" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfd-prom-exporter
+  template:
+    metadata:
+      labels:
+        app: nfd-prom-exporter
+    spec:
+      containers:
+      - args:
+        - "apt update && apt install -y usbutils && apt install -y gcc && gcc -o /resource_available /etc/nfd-prom-conf/resource_available.c && apt install -y curl\npip install -r /etc/nfd-prom-conf/requirements.txt
+          \ \npython /etc/nfd-prom-conf/prom-exp.py\nsleep infinity\n"
+        command:
+        - /bin/sh
+        - -c
+        image: python:3.9-slim
+        name: exporter-container
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 8081
+          name: metrics
+        volumeMounts:
+        - mountPath: /dev
+          name: dev-volume
+          readOnly: true
+        - mountPath: /sys/bus/usb
+          name: bus-volume
+          readOnly: true
+        - mountPath: /etc/nfd-prom-conf
+          name: nfd-prom-conf
+      serviceAccount: nfd-master
+      volumes:
+      - configMap:
+          name: nfd-prom-conf
+        name: nfd-prom-conf
+      - name: dev-volume
+        hostPath:
+          path: /dev
+      - name: bus-volume
+        hostPath:
+          path: /sys/bus/usb

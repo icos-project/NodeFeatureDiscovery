@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nfd-prom
+  name: nfd-prom-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfd-prom-exporter
+  template:
+    metadata:
+      labels:
+        app: nfd-prom-exporter
+    spec:
+      volumes:
+        - name: nfd-prom-conf
+          configMap:
+            name: nfd-prom-conf
+      serviceAccount: nfd-master
+      containers:
+        - name: curl-container
+          image: python:3.9-slim
+          volumeMounts:
+            - name: nfd-prom-conf
+              mountPath: /etc/nfd-prom-conf
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              apt update && apt install -y curl
+              pip install -r /etc/nfd-prom-conf/requirements.txt  
+              python /etc/nfd-prom-conf/prom-exp.py
+              sleep infinity
+          ports:
+           - name: metrics
+             containerPort: 8081
