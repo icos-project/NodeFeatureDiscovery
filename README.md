@@ -41,7 +41,7 @@ In order to check the available metrics:
 
 # Legal
 The Node Feauture Discovery is released under the Apache license.
-Copyright © 2022-2024 NCSRD. All rights reserved.
+Copyright © 2022-2024  ICOS Consortium. All rights reserved.
 
 🇪🇺 This work has received funding from the European Union's HORIZON research and innovation programme under grant agreement No. 101070177.
 
