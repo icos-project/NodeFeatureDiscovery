@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nfd-device-plugin
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nfd-device-plugin
+spec:
+  selector:
+    matchLabels:
+      app: nfd-device-plugin
+  template:
+    metadata:
+      labels:
+        app: nfd-device-plugin
+    spec:
+      containers:
+      - name: nfd-device-plugin
+        resources:
+          requests:
+            cpu: 50m
+            memory: 10Mi
+          limits:
+            cpu: 50m
+            memory: 20Mi
+        image: andreasoikonomakis/device-plugin:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: device-plugin
+          mountPath: /var/lib/kubelet/device-plugins
+        - name: dev
+          mountPath: /dev
+      volumes:
+      - name: device-plugin
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
+      - name: dev
+        hostPath:
+          path: /dev
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule

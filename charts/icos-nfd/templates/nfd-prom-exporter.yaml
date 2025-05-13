@@ -1,12 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
     app: nfd-prom
   name: nfd-prom-exporter
   namespace: {{ include "icos-nfd.namespace" . }}
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: nfd-prom-exporter
@@ -17,11 +16,15 @@ spec:
     spec:
       containers:
       - args:
-        - "apt update && apt install -y usbutils && apt install -y gcc && gcc -o /resource_available /etc/nfd-prom-conf/resource_available.c && apt install -y curl\npip install -r /etc/nfd-prom-conf/requirements.txt
-          \ \npython /etc/nfd-prom-conf/prom-exp.py\nsleep infinity\n"
+        - "apt-get update && apt-get install -y udev && pip install -r /etc/nfd-prom-conf/requirements.txt && python /etc/nfd-prom-conf/prom-exp.py"
         command:
         - /bin/sh
         - -c
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         image: python:3.9-slim
         name: exporter-container
         securityContext:
@@ -33,12 +36,12 @@ spec:
         - mountPath: /dev
           name: dev-volume
           readOnly: true
-        - mountPath: /sys/bus/usb
-          name: bus-volume
-          readOnly: true
         - mountPath: /etc/nfd-prom-conf
           name: nfd-prom-conf
-      serviceAccount: nfd-master
+        - mountPath: /run/udev
+          name: udev-db
+          readOnly: true
+      serviceAccount: nfd-ac
       volumes:
       - configMap:
           name: nfd-prom-conf
@@ -46,6 +49,6 @@ spec:
       - name: dev-volume
         hostPath:
           path: /dev
-      - name: bus-volume
+      - name: udev-db
         hostPath:
-          path: /sys/bus/usb
+          path: /run/udev
