@@ -19,11 +19,11 @@ spec:
         resources:
           requests:
             cpu: 50m
-            memory: 10Mi
+            memory: 250Mi
           limits:
             cpu: 50m
-            memory: 20Mi
-        image: andreasoikonomakis/device-plugin:latest
+            memory: 250Mi
+        image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.Version }}"
         imagePullPolicy: Always
         securityContext:
           privileged: true

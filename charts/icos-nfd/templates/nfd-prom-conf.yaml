@@ -149,7 +149,7 @@ data:
                             if("video" in entry):
                                 video_devices.append(entry)
                             else:
-                                other_devices(entry)
+                                other_devices.append(entry)
 
             video_devices = sorted(video_devices, key=extract_number)                    
             all_devices = video_devices + other_devices
